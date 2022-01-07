@@ -18,6 +18,8 @@ public class GridBuildingSystem : MonoBehaviour
     private Vector3 prevPos;
     private BoundsInt prevArea;
 
+    public int coins = 40;
+
     #region Unity Methods
     private void Awake()
     {
@@ -39,6 +41,13 @@ public class GridBuildingSystem : MonoBehaviour
     {
         if (!temp)
         {
+            coins = 10;
+            return;
+        }
+
+        if (!temp)
+        {
+            coins = 30;
             return;
         }
 
@@ -57,12 +66,42 @@ public class GridBuildingSystem : MonoBehaviour
                 if(prevPos != cellPos)
                 {
                     temp.transform.localPosition = gridLayout.CellToLocalInterpolated(cellPosition: cellPos
-                        + new Vector3(x: .5f, y: .5f, z: 0f));
+                        + new Vector3(.5f, .5f, 0f));
                     prevPos = cellPos;
                     FollowBuilding();
                 }
             }
         }
+        else if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (temp.CanBePlaced())
+            {
+                temp.Place();
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ClearArea();
+            Destroy(temp.gameObject);
+        }
+    }
+
+    public void Upgrade()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (EventSystem.current.IsPointerOverGameObject(0))
+            {
+                return;
+            }
+
+            if (temp.CanBePlaced())
+            {
+                temp.switchObject();
+            }
+            Destroy(temp.gameObject);
+        }
+        
     }
 
     #endregion
@@ -141,6 +180,26 @@ public class GridBuildingSystem : MonoBehaviour
         }
         TempTilemap.SetTilesBlock(buildingArea, tileArray);
         prevArea = buildingArea;
+    }
+
+    public bool CanTakeArea(BoundsInt area)
+    {
+        TileBase[] baseArray = GetTilesBlock(area, MainTilemap);
+        foreach (var b in baseArray)
+        {
+            if(b != tileBase[TileType.White])
+            {
+                Debug.Log("Can't place here!");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void TakeArea(BoundsInt area)
+    {
+        SetTilesBlock(area, TileType.Empty, TempTilemap);
+        SetTilesBlock(area, TileType.Green, MainTilemap);
     }
     #endregion
 }
